@@ -1,0 +1,61 @@
+<component name="InspectionProjectProfileManager">
+  <profile version="1.0">
+    <option name="myName" value="Project Default" />
+    <inspection_tool class="PyInterpreterInspection" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="PyPackageRequirementsInspection" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="ignoredPackages">
+        <value>
+          <list size="47">
+            <item index="0" class="java.lang.String" itemvalue="edn_format" />
+            <item index="1" class="java.lang.String" itemvalue="mne" />
+            <item index="2" class="java.lang.String" itemvalue="json" />
+            <item index="3" class="java.lang.String" itemvalue="datetime" />
+            <item index="4" class="java.lang.String" itemvalue="dateutil" />
+            <item index="5" class="java.lang.String" itemvalue="scipy" />
+            <item index="6" class="java.lang.String" itemvalue="numpy" />
+            <item index="7" class="java.lang.String" itemvalue="pandas" />
+            <item index="8" class="java.lang.String" itemvalue="six" />
+            <item index="9" class="java.lang.String" itemvalue="scikit-learn" />
+            <item index="10" class="java.lang.String" itemvalue="matplotlib" />
+            <item index="11" class="java.lang.String" itemvalue="python-dateutil" />
+            <item index="12" class="java.lang.String" itemvalue="pyparsing" />
+            <item index="13" class="java.lang.String" itemvalue="matlabengineforpython" />
+            <item index="14" class="java.lang.String" itemvalue="python-crontab" />
+            <item index="15" class="java.lang.String" itemvalue="certifi" />
+            <item index="16" class="java.lang.String" itemvalue="mednickdb-pyparse" />
+            <item index="17" class="java.lang.String" itemvalue="cryptography" />
+            <item index="18" class="java.lang.String" itemvalue="zope.interface" />
+            <item index="19" class="java.lang.String" itemvalue="asn1crypto" />
+            <item index="20" class="java.lang.String" itemvalue="pytest" />
+            <item index="21" class="java.lang.String" itemvalue="pluggy" />
+            <item index="22" class="java.lang.String" itemvalue="cffi" />
+            <item index="23" class="java.lang.String" itemvalue="py" />
+            <item index="24" class="java.lang.String" itemvalue="pycparser" />
+            <item index="25" class="java.lang.String" itemvalue="requests" />
+            <item index="26" class="java.lang.String" itemvalue="attrs" />
+            <item index="27" class="java.lang.String" itemvalue="chardet" />
+            <item index="28" class="java.lang.String" itemvalue="win-inet-pton" />
+            <item index="29" class="java.lang.String" itemvalue="PySocks" />
+            <item index="30" class="java.lang.String" itemvalue="pyOpenSSL" />
+            <item index="31" class="java.lang.String" itemvalue="pytz" />
+            <item index="32" class="java.lang.String" itemvalue="urllib3" />
+            <item index="33" class="java.lang.String" itemvalue="idna" />
+            <item index="34" class="java.lang.String" itemvalue="mednickdb-pyapi" />
+            <item index="35" class="java.lang.String" itemvalue="mednickdb-pysleep" />
+            <item index="36" class="java.lang.String" itemvalue="pyyaml" />
+            <item index="37" class="java.lang.String" itemvalue="pyedf" />
+            <item index="38" class="java.lang.String" itemvalue="pytest-dependency" />
+            <item index="39" class="java.lang.String" itemvalue="wincertstore" />
+            <item index="40" class="java.lang.String" itemvalue="wonambi" />
+            <item index="41" class="java.lang.String" itemvalue="colorama" />
+            <item index="42" class="java.lang.String" itemvalue="kiwisolver" />
+            <item index="43" class="java.lang.String" itemvalue="xlrd" />
+            <item index="44" class="java.lang.String" itemvalue="xarray" />
+            <item index="45" class="java.lang.String" itemvalue="cycler" />
+            <item index="46" class="java.lang.String" itemvalue="PyYAML" />
+          </list>
+        </value>
+      </option>
+    </inspection_tool>
+  </profile>
+</component>
