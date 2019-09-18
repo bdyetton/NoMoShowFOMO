@@ -1,0 +1,11 @@
+body {
+  padding-top: 100px;
+}
+.starter-template {
+  padding: 60px 15px;
+  text-align: center;
+}
+
+.img-hor-flip {
+  transform: scaleX(-1); // Rotate 180 degrees on both
+}

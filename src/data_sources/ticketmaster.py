@@ -7,6 +7,7 @@ import pytz
 import os
 import numpy as np
 import pickle
+import time
 my_file = os.path.dirname('__file__')
 
 class TicketMaster():
@@ -35,10 +36,13 @@ class TicketMaster():
         if event_limit is None or event_limit > num_events:
             event_limit = num_events
         while current_events < event_limit:
+            time.sleep(0.2)
             if np.mod(current_events, np.floor(event_limit / 10)) == 0:
                 print('parsing is', 100 * current_events / event_limit, 'percent complete')
             ret = json.loads(self.req.get(self.base + 'events?' + params_str +
                                           '&start='+str(current_events)+self.default_params).content)
+            for i in range(len(ret['events'])):
+                ret['events'][i]['sample_time'] = datetime.datetime.now()
             current_events = ret['pagination']['start']+ret['pagination']['rows']
             events += ret['events']
         return events

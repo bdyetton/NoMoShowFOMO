@@ -51,25 +51,32 @@
       </div>
     </nav>
 
-    <main role="main" class="container">
+    <div class="container">
 
-        <br><br>
+        <div class="starter-template">
+            <h2>Input Page</h2>
+            <p>Enter some user input</p>
+        </div>
 
-          <div class="starter-template">
-            <h1>Bootstrap starter template</h1>
-            <p class="lead">Use this document as a way to quickly start any new project.<br> All you get is this text and a mostly barebones HTML document.</p>
-          </div>
+        <div class = "container">
 
-        <table class="table table-hover">
-        <tr><th>index</th><th>Attendant</th><th>birth_month</th></tr>
-        {% for birth in births %}
-        <tr><td>{{ birth['index'] }}</td><td>{{ birth['attendant']}}</td><td> {{ birth['birth_month'] }}</td></tr>
-        {% endfor %}
-        </table>
+          <form  action="/output" method="GET">
+            <div class="form-group">
+              <label for="birth_month">Birth Month:</label>
+              <input type="text" id="birth_month" name='birth_month' placeholder="e.g. ">
+            </div>
+
+            <div>
+              <button type="submit" class="btn btn-default btn-lg">Find these Cesareans!</button>
+            </div>
+
+          </form>
+        </div>
+
         <script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
-        <script src="../static/js/bootstrap.min.js"></script>
+        <script src="static/js/bootstrap.min.js"></script>
 
-    </main><!-- /.container -->
+      </div> <!-- /.container-->
 
     <!-- Bootstrap core JavaScript
     ================================================== -->
