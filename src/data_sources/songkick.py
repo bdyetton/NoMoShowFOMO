@@ -20,6 +20,21 @@ class SongKick():
         self.default_params = '&apikey='+self.api_key #&domain=canada
         self.req = requests.session()
 
+    def get_songkick_data_for_event(self, row):
+        venue_series = self.get_venue_capacity(row['venue'], row['lat'], row['long'])
+        venue_series['sk_popularity'] = self.get_songkick_popularity(row['performers'], row['event_date'], row['lat'],
+                                                                     row['long'])
+        last_local_events = self.get_last_local_events(row['performers'], row['event_date'], row['lat'], row['long'])
+        if last_local_events.shape[0] > 0:
+            venue_series['last_time_played'] = last_local_events.iloc[0]['event_start']
+            venue_series['days_since_last_played'] = (
+                        row['event_date'].date() - last_local_events.iloc[0]['event_start'].date()).days
+        else:
+            venue_series['last_time_played'] = np.nan
+            venue_series['days_since_last_played'] = np.nan
+        venue_series['total_times_played_locally'] = last_local_events.shape[0]
+        return venue_series
+
     def get_venue_capacity(self, venue_name, expected_lat, expected_long):
         _, metro_area, _ = self.get_songkick_city_and_metro_region(expected_lat, expected_long)
         if pd.isna(metro_area):
@@ -61,8 +76,8 @@ class SongKick():
         event_data = json.loads(self.req.get('https://api.songkick.com/api/3.0/events.json?'
                                            + '&location=geo:'+str(lat)+','+str(long)
                                            + '&artist_name='+artist
-                                           + '&min_date='+event_date.strftime('%Y-%m-%d')
-                                           + '&max_date='+event_date.strftime('%Y-%m-%d')
+                                           + '&min_date='+(event_date-datetime.timedelta(days=2)).strftime('%Y-%m-%d')
+                                           + '&max_date='+(event_date+datetime.timedelta(days=2)).strftime('%Y-%m-%d')
                                            + self.default_params).content)
         if event_data['resultsPage']['status'] != 'ok':
             return np.nan
@@ -100,7 +115,7 @@ class SongKick():
             gigography = json.loads(self.req.get(url+self.default_params).content) #TODO do retries
         except json.decoder.JSONDecodeError:
             try:
-                time.sleep(1)
+                time.sleep(0.5)
                 gigography = json.loads(self.req.get(url + self.default_params).content)
             except json.decoder.JSONDecodeError:
                 return pd.DataFrame()
@@ -146,7 +161,7 @@ class SongKick():
 
 if __name__=='__main__':
     sk = SongKick()
-    print(sk.get_songkick_popularity('Elder Island', datetime.datetime.now(), 37.73, -122.43))
+    print(sk.get_songkick_popularity('Bon Iver', datetime.datetime(day=16, month=4, year=2020), 40.41, -3.7))
     #print(sk.get_songkick_city_and_metro_region(51.5, 0.127))
     #print(sk.get_last_local_events("deadmau5", datetime.datetime.now(), 51.5, 0.127))
-    print(sk.get_venue_capacity('The Fillmore', 37.73, -122.43))
+    #print(sk.get_venue_capacity('The Fillmore', 37.73, -122.43))

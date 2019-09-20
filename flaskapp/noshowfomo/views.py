@@ -1,6 +1,6 @@
 from flask import render_template, request
 from noshowfomo import app
-from noshowfomo.models import SelloutClassifier
+from noshowfomo.models import predict_from_url
 
 # Python code to connect to Postgres
 # You may need to modify this based on your OS,
@@ -22,7 +22,8 @@ def index():
 def output():
   ticketmaster_url = request.args.get('input_url')
   print('Got-------', ticketmaster_url)
-  sc = SelloutClassifier()
-  will_sell_out = sc.predict_from_url(ticketmaster_url='sdasd')
-  artist, venue, location = sc.get_event_details()
-  return render_template("output.html", artist=artist, venue=venue, location=location, will_sell_out=will_sell_out)
+  will_sell_out, artist, venue, city, country, event_url = predict_from_url(ticketmaster_url)
+
+  return render_template("output.html", artist=artist,
+                         venue=venue, city=city,
+                         country=country, will_sell_out=will_sell_out, event_url=event_url)

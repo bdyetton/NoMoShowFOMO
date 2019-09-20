@@ -13,11 +13,12 @@
     <link href="../static/css/bootstrap.min.css" rel="stylesheet">
 
     <!-- Custom styles for this template -->
+    <script type="text/javascript" src="../static/js/pace.min.js"></script>
     <link href="../static/css/starter-template.css" rel="stylesheet">
   </head>
 
   <body class="text-center" data-gr-c-s-loaded="true">
-    <form class="form-text">
+
         <div style="width: 300px; margin: 0 auto">
             {% if will_sell_out %}
                 <h1 class="h2 mb-3 font-weight-normal">Oh no!</h1>
@@ -27,18 +28,20 @@
                 <img class="mb-4" src="../static/assets/sweat_smile.png" alt="" width="82" height="85">
             {% endif %}
                 <h1 class="h4 mb-3 font-weight-normal">{{artist}}</h1>
-                <h1 class="h5 mb-3 font-weight-normal">@ {{venue}}, {{location}}</h1>
+                <h1 class="h5 mb-3 font-weight-normal">@ {{venue}}, {{city}}, {{country}}</h1>
                 <h1 class="h4 mb-3 font-weight-normal">
                     {% if will_sell_out %}
-                    will sell out!
+                    is likely to sell out!
                     {% else %}
-                    won't sell out
+                    isn't likely to sell out
                     {% endif %}
                 </h1>
                 <br>
-                <button class="btn btn-lg btn-primary btn-block" type="submit">Get {{artist}} Tickets Now</button>
-              <p class="mt-5 mb-3 text-muted">© 2019 Ben Yetton</p>
+            <form class="form-text" action="{{event_url}}">
+                <button class="btn btn-lg btn-primary btn-block" type="submit" onclick="http://www.google.com">Get {{artist}} Tickets Now</button>
+            </form>
+            <p class="mt-5 mb-3 text-muted">© 2019 Ben Yetton</p>
         </div>
-    </form>
+
   </body>
 </html>

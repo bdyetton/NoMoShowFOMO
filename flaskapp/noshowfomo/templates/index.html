@@ -13,21 +13,28 @@
     <link href="../static/css/bootstrap.min.css" rel="stylesheet">
 
     <!-- Custom styles for this template -->
+    <script type="text/javascript" src="../static/js/pace.min.js"></script>
     <link href="../static/css/starter-template.css" rel="stylesheet">
+
   </head>
 
   <body class="text-center" data-gr-c-s-loaded="true">
-    <form class="form-text" action="/output" method="GET">
+    <br>
+    <br>
         <div style="width: 300px; margin: 0 auto">
               <img class="mb-4" src="../static/assets/rock_on_emoji.png" alt="" width="62" height="62">
               <img class="mb-4" src="../static/assets/happy_eye_closed.png" alt="" width="82" height="82">
-              <img class="mb-4" src="../static/assets/rock_on_emoji.png" alt="" width="62" height="62">
+              <img class="mb-4" src="../static/assets/rock_on_emoji_right.png" alt="" width="62" height="62">
               <h1 class="h3 mb-3 font-weight-normal">No Mo' Show <i>#FOMO</i></h1>
-              <label for="input_url" class="sr-only">Enter a (European) Ticketmaster URL</label>
-              <input type="text" id="input_url" class="form-control" placeholder="Ticketmaster URL" required="" autofocus="">
-              <button class="btn btn-lg btn-primary btn-block" type="submit">Relieve my <i>#FOMO</i></button>
+              <h1 class="h6 mb-3 font-weight-normal">Check if an upcoming concert will sell out</h1>
+              <form class="form-text" action="/output" method="GET">
+                  <div class="form-group">
+                    <label for="input_url" class="sr-only">Enter a Ticketmaster URL</label>
+                    <input type="text" id="input_url" name="input_url" class="form-control" placeholder="Ticketmaster URL" required="" autofocus="">
+                    <button class="btn btn-lg btn-primary btn-block" type="submit">Relieve my <i>#FOMO</i></button>
+                  </div>
+              </form>
               <p class="mt-5 mb-3 text-muted">© 2019 Ben Yetton</p>
         </div>
-    </form>
   </body>
 </html>

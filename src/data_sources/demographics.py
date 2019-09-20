@@ -11,13 +11,20 @@ import pycountry
 my_file = os.path.dirname('__file__')
 
 class Demographics():
-    def __init__(self):
+    def __init__(self, city_to_city, country_to_country):
         #self.tzwhere = tzwhere.tzwhere()
         self.base = 'https://public.opendatasoft.com/api/records/1.0/search/?dataset=worldcitiespop&'
         self.default_params = '&sort=population'
         self.req = requests.session()
+        self.city_to_city_map = city_to_city
+        self.country_to_country_map = country_to_country
 
     def get_pop(self, city, country):
+        if country in self.country_to_country_map:
+            country = self.country_to_country_map[country]
+        if city in self.city_to_city_map:
+            city = self.city_to_city_map[city]
+
         pyco = pycountry.countries.search_fuzzy(country)[0]
         country_code = pyco.alpha_2.lower()
         ret = json.loads(self.req.get(self.base+'q='+city+self.default_params).content)
@@ -31,7 +38,7 @@ class Demographics():
                 iso_region = city_req['fields']['region']
                 iso_country = city_req['fields']['country']
                 break
-        return pop, iso_region, iso_country
+        return pd.Series({'population':pop, 'iso_region':iso_region, 'iso_country':iso_country})
 
 if __name__=='__main__':
     dg = Demographics()
