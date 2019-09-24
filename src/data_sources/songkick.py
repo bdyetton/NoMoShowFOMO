@@ -38,6 +38,14 @@ class SongKick():
         #_, metro_area, _ = self.get_songkick_city_and_metro_region(expected_lat, expected_long)
         #if pd.isna(metro_area):
         query = venue_name
+        row_default = {'venue_capacity':None,
+                       'venue_name':venue_name,
+                       'venue_fuzzwuzz_score':0,
+                       'venue_city':None,
+                       'venue_country':None,
+                       'venue_lat':None,
+                       'venue_long':None,
+                       'venue_dist_from_expected':None}
         # else:
         #     query = venue_name + ' ' + metro_area
         venues_info = json.loads(self.req.get(self.base + 'venues.json?query='+query+self.default_params).content)
@@ -45,7 +53,7 @@ class SongKick():
             venues = venues_info['resultsPage']['results']['venue']
             venue_cont = []
             for venue in venues:
-                row = {}
+                row = row_default.copy()
                 row['venue_capacity'] = venue['capacity'] if 'capacity' in venue else None
                 row['venue_name'] = venue['displayName']
                 row['venue_fuzzwuzz_score'] = fuzz.token_set_ratio(venue_name, row['venue_name'])
@@ -59,15 +67,17 @@ class SongKick():
                     continue
                 venue_cont.append(pd.Series(row))
             if len(venue_cont) == 0:
-                return pd.Series()
+                return pd.Series(row_default)
             venue_df = pd.concat(venue_cont, axis=1).T
             possible_matches = venue_df.loc[venue_df['venue_dist_from_expected']<10,:] #should be less than 1 km from expected loc
             if possible_matches.shape[0] > 0:
-                return possible_matches.sort_values(['venue_fuzzwuzz_score','venue_capacity'], ascending=False).iloc[0]
+                return possible_matches.sort_values(['venue_fuzzwuzz_score','venue_capacity'], ascending=False).iloc[0].copy()
             else:
-                return pd.Series()
+                return pd.Series(row_default)
         else:
-            return pd.Series()
+            print('SK Status not ok!')
+            print(venues_info)
+            return pd.Series(row_default)
 
     def get_songkick_popularity(self, artist, event_date, lat, long):
         event_data = json.loads(self.req.get('https://api.songkick.com/api/3.0/events.json?'

@@ -13,26 +13,48 @@ from multiprocessing.pool import ThreadPool
 from multiprocessing.pool import Pool
 from threading import Thread
 from queue import Queue, Empty
-debug = True
+debug = False
 
 
 def add_songkick_threaded(df):
     num_splits = 4
     dfs = np.array_split(df, num_splits)
     pool = Pool(processes=num_splits)
-    sk_dfs = pool.map(add_songkick, dfs)
+    names = [str(i) for i in range(num_splits)]
+    sk_dfs = pool.map(add_songkick, (zip(dfs, names), basedate))
     return pd.concat(sk_dfs)
 
 
-def add_songkick(df):
+def add_songkick(df, basedate):
+    if isinstance(df, tuple):
+        df = df[0]
+        thread_name = '_'+df[1]+'_'
+    else:
+        thread_name = ''
+    try:
+        existing_df = pd.read_pickle('../../data/songkick_temp' + basedate + '.pkl').set_index('idx')
+        already_done = df.index.isin(existing_df.index)
+        not_done_df = df.loc[~already_done, :]
+        existing_df = existing_df.reset_index()
+
+    except FileNotFoundError:
+        not_done_df = df
+        existing_df = pd.DataFrame()
+
+    print('total records are', df.shape[0], 'with')
+    print(not_done_df.shape[0], 'records not done')
     sk = songkick.SongKick()
     sk_cont = []
-    print('running sk for ', df.shape[0],'records')
-    idx_real = -1
-    for idx, row in df.iterrows():
+    print('running sk for ', not_done_df.shape[0],'records')
+    idx_real = 0
+    for idx, row in not_done_df.iterrows():
         idx_real += 1
-        if np.mod(idx_real, np.floor(df.shape[0] / 10)) == 0:
-            print('SK is', np.floor(100 * idx_real / df.shape[0]), 'percent complete')
+        if np.mod(idx_real, np.floor(df.shape[0] / 100)) == 0:
+            print('SK is', np.floor(100 * idx_real / not_done_df.shape[0]), 'percent complete')
+            sk_df = pd.concat(sk_cont, axis=1).T
+            sk_df = pd.concat([sk_df, existing_df])
+            #sk_df = sk_df.set_index('idx')
+            sk_df.to_pickle('../../data/songkick_temp'+basedate+thread_name+'.pkl')
         try:
             venue_series = sk.get_songkick_data_for_event(row)
         except KeyboardInterrupt:
@@ -47,8 +69,8 @@ def add_songkick(df):
         venue_series['idx'] = idx
         sk_cont.append(venue_series)
     sk_df = pd.concat(sk_cont, axis=1).T
+    sk_df = pd.concat([sk_df, existing_df])
     sk_df = sk_df.set_index('idx')
-    sk_df.to_csv('please_work_sk.csv')
     return sk_df
 
 
@@ -98,14 +120,18 @@ def add_time_features(df):
     tm_df = tm_df.set_index('idx')
     return tm_df
 
-def add_local_popularity(df, basedate):
-    num_splits = 5
+def add_local_popularity(df, basedate, use_proxies):
+    if not use_proxies:
+        num_splits = 1
+    else:
+        num_splits = 5
     try:
         existing_df = pd.read_pickle('../../data/trends_'+basedate+'.pkl')
         already_done = df.index.isin(existing_df.index)
         not_done_df = df.loc[~already_done, :]
     except FileNotFoundError:
         not_done_df = df
+        existing_df = pd.DataFrame()
 
     print('total records are', df.shape[0],'with')
     print(not_done_df.shape[0], 'records not done')
@@ -114,9 +140,9 @@ def add_local_popularity(df, basedate):
     q_out = Queue()
     pg = google_trends.ProxyGrenerator(q_in)
     thread_cont = []
-    tr_dfs_cont = []
+    tr_dfs_cont = [existing_df]
     for thread_idx in range(num_splits):
-        th = Thread(target=local_pop_thread_run, args=(dfs[thread_idx], q_in, q_out))
+        th = Thread(target=local_pop_thread_run, args=(dfs[thread_idx], q_in, q_out, use_proxies))
         th.start()
         thread_cont.append(th)
 
@@ -125,11 +151,12 @@ def add_local_popularity(df, basedate):
     while all_alive:
         for thread in thread_cont:
             all_alive &= thread.isAlive()
-        pg.check_for_new_proxies()
-        last_proxy_ticker += 1
-        if last_proxy_ticker > 60:
-            pg.save_proxylist()
-            last_proxy_ticker = 0
+        if use_proxies:
+            pg.check_for_new_proxies()
+            last_proxy_ticker += 1
+            if last_proxy_ticker > 60:
+                pg.save_proxylist()
+                last_proxy_ticker = 0
         try:
             new_data = q_out.get_nowait()
         except Empty:
@@ -142,8 +169,8 @@ def add_local_popularity(df, basedate):
     return pd.concat(tr_dfs_cont, sort=True)
 
 
-def local_pop_thread_run(df, q_in, q_out):
-    gt = google_trends.Trends(q_in)
+def local_pop_thread_run(df, q_in, q_out, use_proxy):
+    gt = google_trends.Trends(q_in, use_proxy=use_proxy)
     gt_cont = []
     print('running popularity for ', df.shape[0], 'records')
     idx_real = 0
@@ -251,7 +278,7 @@ if __name__ == '__main__':
         df.to_pickle('../../data/events_and_avail_'+basedate+'.pkl')
     if routine == 'songkick':
         df_events = pd.read_pickle('../../data/events_and_avail_' + basedate + '.pkl')
-        df = add_songkick_threaded(df_events)
+        df = add_songkick(df_events, basedate)
         df.to_pickle('../../data/songkick_'+basedate+'.pkl')
     if routine == 'time':
         df_events = pd.read_pickle('../../data/events_and_avail_' + basedate + '.pkl')
@@ -259,7 +286,7 @@ if __name__ == '__main__':
         df.to_pickle('../../data/time_'+basedate+'.pkl')
     if routine == 'popularity':
         df_events = pd.read_pickle('../../data/events_and_avail_' + basedate + '.pkl')
-        df = add_local_popularity(df_events, basedate)
+        df = add_local_popularity(df_events, basedate, use_proxies=True)
         df.to_pickle('../../data/popularity_'+basedate+'.pkl')
     if routine == 'demographics':
         df_events = pd.read_pickle('../../data/events_and_avail_' + basedate + '.pkl')

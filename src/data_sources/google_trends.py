@@ -11,6 +11,7 @@ from pytrends.exceptions import ResponseError
 import requests
 import queue
 import pickle
+from collections import deque
 import numpy as np
 
 
@@ -24,15 +25,28 @@ class ProxyGrenerator():
     def __init__(self, q_out: queue.Queue):
         self.q_out = q_out
         self.req = requests.session()
+        self.didsoft_list = deque()
         try:
             self.proxylist = pickle.load(open('proxylist.pkl','rb'))
         except FileNotFoundError:
             self.proxylist = set()
 
+    def get_didsoft_proxy(self):
+        if len(self.didsoft_list) == 0:
+            url = 'http://list.didsoft.com/get?email=yettonbd@gmail.com&pass=334hwf&pid=httppremium&https=yes&showcountry=no&country=US|GB|CA|FR|DE'
+            try:
+                resp = self.req.get(url)
+            except requests.exceptions.ConnectionError:
+                return
+            ret = resp.content.decode('utf8').split('\n')
+            ret = ['https://'+prox for prox in ret]
+            self.didsoft_list.extend(ret)
+            print('NEW DIDSOFT')
 
-    def check_for_new_proxies(self):
-        if self.q_out is not None and self.q_out.full():
-            return
+        while not self.q_out.full():
+            self.q_out.put(self.didsoft_list.popleft())
+
+    def get_pubprox(self):
         try:
             resp = self.req.get('http://pubproxy.com/api/proxy?' +
                                 'https=true' +
@@ -45,7 +59,8 @@ class ProxyGrenerator():
             print(resp.content)
             return None
         # print('Got new proxy, support is',ret['data'][0]['support'])
-        newproxylist = ['https://' + prox['ipPort'] for prox in ret['data']]
+        https = ['','s']
+        newproxylist = [prox['type']+https[prox['support']['https']]+'://' + prox['ipPort'] for prox in ret['data']]
         newproxylist = [prox for prox in newproxylist if prox not in self.proxylist]
         self.proxylist.update(newproxylist)
         print('Got', len(newproxylist),'new proxies')
@@ -55,12 +70,21 @@ class ProxyGrenerator():
             for prox in newproxylist:
                 self.q_out.put(prox)
 
+    def check_for_new_proxies(self, service='didsoft'):
+        if self.q_out is not None and self.q_out.full():
+            return
+        if service == 'didsoft':
+            self.get_didsoft_proxy()
+        else:
+            self.get_pubprox()
+
     def save_proxylist(self):
         pickle.dump(self.proxylist, open('proxylist.pkl','wb'))
 
 class Trends():
-    def __init__(self, q_in=None):
+    def __init__(self, q_in=None, use_proxy=True):
         self.api = None
+        self.use_proxies = use_proxy
         self.q_in = q_in
         self.req = requests.session()
         self.region_map = {
@@ -111,18 +135,22 @@ class Trends():
                 '30':'WP',
                 '32':'ZP',
             },
-            'NO':{'23':'16',
-                  '50':'16'}
+            # 'NO':{'23':'16',
+            #       '50':'16'}
         },
         self.login()
 
     def login(self):
         for t in range(30):
             try:
-                del self.api
+                if hasattr(self, 'api'):
+                    del self.api
+                proxies = [self.q_in.get()] if self.use_proxies else []
                 self.api = TrendReq(hl='en-US', tz=360,
-                                    proxies=[self.q_in.get()],
-                                    retries=5, backoff_factor=0.5)
+                                    proxies=proxies,
+                                    timeout=(3,6),
+                                    retries=5, backoff_factor=1)
+                time.sleep(1)
                 print('Successful login @ login')
                 return
             except (ValueError, requests.exceptions.ConnectionError):
@@ -136,18 +164,19 @@ class Trends():
                 ret = json.loads(self.req.get('http://api.geonames.org/countrySubdivisionJSON?lat='
                                     +str(lat)+'&lng='+str(long)+'&maxRows=10&username=bdyetton').content)
                 break
-            except requests.exceptions.ConnectionError:
+            except requests.exceptions.ConnectionError as e:
+                print(e)
                 continue
         else:
             raise ValueError('Remote disconnect x5 for geonames')
         if 'codes' not in ret:
+            print(ret)
             raise ValueError('Lat='+str(lat)+', Long='+str(long)+'is not in a country')
         codes = [code for code in ret['codes'] if code['type']=='ISO3166-2']
         region_code = sorted(codes, key=lambda x: x['level'])[0]['code']
         if ret['countryCode'] in self.region_map:
             if region_code not in self.region_map[ret['countryCode']].values():
-                if region_code in self.region_map[ret['countryCode']].keys():
-                    region_code = self.region_map[ret['countryCode']][region_code]
+                region_code = self.region_map[ret['countryCode']][region_code]
         region = ret['countryCode'] + '-' + region_code
         return region
 
@@ -164,12 +193,13 @@ class Trends():
                                            gprop='youtube' if youtube else None)
                     interest_by_country_df = self.api.interest_by_region(inc_geo_code=True).set_index('geoCode')
                     interest_by_country = interest_by_country_df.loc[country_iso,kw]
-                time.sleep(0.8)
+                time.sleep(0.55)
                 self.api.build_payload([kw],
                                        timeframe=timeframe,
                                        geo=country_iso,
                                        gprop='youtube' if youtube else None)
                 interest_by_region_df = self.api.interest_by_region(resolution='REGION', inc_geo_code=True).set_index('geoCode')
+                time.sleep(0.55)
                 if problem:
                     problem = False
                 print('--------------------------------------------Query successful :)')

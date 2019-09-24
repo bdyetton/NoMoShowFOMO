@@ -1,11 +1,11 @@
-from src.modeling.classifiers import RandomForest
+from src.modeling.classifiers import NoFomoRandomForest, NoFomoXGBoost
 from src.modeling.data_pipeline import DataPipeline
-model = RandomForest(init_as='random_forest_19-09-2019')
+model = NoFomoXGBoost(name='testing', load=True)
 pipeline = DataPipeline()
 
 def predict_from_url(url):
     data_point = pipeline.data_point_from_url(url)
-    prediction = model.predict(data_point)
+    prediction = model.predict_single(data_point)
     return prediction, \
            data_point['performers'], \
            data_point['venue'], \
