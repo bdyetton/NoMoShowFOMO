@@ -14,12 +14,13 @@ class DataPipeline():
         self.tm = ticketmaster.TicketMaster()
         self.sk = songkick.SongKick()
         self.demo = demographics.Demographics(city_to_city=self.tm.city_to_city_map, country_to_country=self.tm.country_to_country_map)
-        self.trends = google_trends.Trends()
+        #self.trends = google_trends.Trends()
 
     def data_point_from_url(self, url):
         event = self.tm.get_event_from_url(url)
         songkick_data = self.sk.get_songkick_data_for_event(event)
-        trends_data = self.trends.get_geo_trends(event['performers'], 'today 5-y', self.trends.get_iso_region(event['lat'], event['long']))
+        #trends_data = self.trends.get_geo_trends(event['performers'], 'today 5-y', self.trends.get_iso_region(event['lat'], event['long']))
+        trends_data = pd.Series()
         avail_data = self.tm.add_availability_info(event)
         pop_data = self.demo.get_pop(event['city'], event['country'])
         time_data = self.tm.get_time_features_for_event(event)

@@ -14,7 +14,6 @@ def point_dist(x1,y1,x2,y2):
 
 class SongKick():
     def __init__(self):
-        #self.tzwhere = tzwhere.tzwhere()
         self.base = 'https://api.songkick.com/api/3.0/search/'
         self.api_key = os.getenv('songkick_api_key')
         self.default_params = '&apikey='+self.api_key #&domain=canada
@@ -36,20 +35,18 @@ class SongKick():
         return venue_series
 
     def get_venue_capacity(self, venue_name, expected_lat, expected_long):
-        _, metro_area, _ = self.get_songkick_city_and_metro_region(expected_lat, expected_long)
-        if pd.isna(metro_area):
-            query = venue_name
-        else:
-            query = venue_name + ' ' + metro_area
+        #_, metro_area, _ = self.get_songkick_city_and_metro_region(expected_lat, expected_long)
+        #if pd.isna(metro_area):
+        query = venue_name
+        # else:
+        #     query = venue_name + ' ' + metro_area
         venues_info = json.loads(self.req.get(self.base + 'venues.json?query='+query+self.default_params).content)
         if venues_info['resultsPage']['status'] == 'ok' and len(venues_info['resultsPage']['results'])>0:
             venues = venues_info['resultsPage']['results']['venue']
             venue_cont = []
             for venue in venues:
-                if venue['capacity'] is None:
-                    continue
                 row = {}
-                row['venue_capacity'] = venue['capacity']
+                row['venue_capacity'] = venue['capacity'] if 'capacity' in venue else None
                 row['venue_name'] = venue['displayName']
                 row['venue_fuzzwuzz_score'] = fuzz.token_set_ratio(venue_name, row['venue_name'])
                 row['venue_city'] = venue['city']['displayName']
@@ -66,7 +63,7 @@ class SongKick():
             venue_df = pd.concat(venue_cont, axis=1).T
             possible_matches = venue_df.loc[venue_df['venue_dist_from_expected']<10,:] #should be less than 1 km from expected loc
             if possible_matches.shape[0] > 0:
-                return possible_matches.sort_values('venue_fuzzwuzz_score', ascending=False).iloc[0]
+                return possible_matches.sort_values(['venue_fuzzwuzz_score','venue_capacity'], ascending=False).iloc[0]
             else:
                 return pd.Series()
         else:
@@ -119,7 +116,7 @@ class SongKick():
                 gigography = json.loads(self.req.get(url + self.default_params).content)
             except json.decoder.JSONDecodeError:
                 return pd.DataFrame()
-        if gigography['resultsPage']['status'] != 'ok':
+        if gigography['resultsPage']['status'] != 'ok' or len(gigography['resultsPage']['results'])==0:
             return pd.DataFrame()
         events = []
         events += gigography['resultsPage']['results']['event']

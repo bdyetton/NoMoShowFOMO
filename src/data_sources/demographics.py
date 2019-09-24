@@ -20,6 +20,8 @@ class Demographics():
         self.country_to_country_map = country_to_country
 
     def get_pop(self, city, country):
+        if city is None or country is None:
+            return pd.Series()
         if country in self.country_to_country_map:
             country = self.country_to_country_map[country]
         if city in self.city_to_city_map:

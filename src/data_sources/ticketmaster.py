@@ -21,6 +21,7 @@ class TicketMaster():
                               '&category_ids=10001' +\
                               '&is_not_package=true' +\
                               '&exlude_external=true' +\
+                              '&cancelled=False'+\
                               '&rows=250'+\
                               '&apikey='+self.api_key
         self.req = requests.session()
@@ -86,14 +87,13 @@ class TicketMaster():
             print('Total possible events in domain='+domain+' is', num_events)
             current_events = ret['pagination']['start']+ret['pagination']['rows']
             for i in range(len(ret['events'])):
-                ret['events'][i]['sample_time'] = datetime.datetime.now()
+                ret['events'][i]['sample_time'] = datetime.datetime.now(datetime.datetime.now().astimezone().tzinfo)
             events += ret['events']
             if event_limit is None or current_event_limit > num_events:
                 current_event_limit = num_events
             else:
                 current_event_limit = event_limit
             while current_events < current_event_limit:
-                time.sleep(0.2)
                 if np.mod(current_events, np.floor(current_event_limit / 10)) == 0:
                     print('parsing for domain='+domain+' is', 100 * current_events / current_event_limit, 'percent complete')
                 ret = json.loads(self.req.get(self.base + 'events?' + params_str + '&domain='+domain+
@@ -101,7 +101,7 @@ class TicketMaster():
                 if 'events' not in ret:
                     continue
                 for i in range(len(ret['events'])):
-                    ret['events'][i]['sample_time'] = datetime.datetime.now()
+                    ret['events'][i]['sample_date'] = datetime.datetime.now(datetime.datetime.now().astimezone().tzinfo)
                 current_events = ret['pagination']['start']+ret['pagination']['rows']
                 events += ret['events']
         print('Found',len(events),'events')
@@ -155,6 +155,8 @@ class TicketMaster():
         row['event_date'] = eventdate
         row['currency'] = event_raw['currency']
         row['sold_out'] = event_raw['properties']['sold_out']
+        if event_raw['properties']['cancelled'] or event_raw['properties']['rescheduled']:
+            return None
         row['seats_available'] = event_raw['properties']['seats_available']
         address = event_raw['venue']['location']['address']
         row['lat'] = address['lat'] if 'lat' in address else None
@@ -165,7 +167,9 @@ class TicketMaster():
         row['venue_id'] = event_raw['venue']['id']
         row['event_url'] = event_raw['url']
         row['ticketmaster_venue_id'] = event_raw['venue']['id']
-        row['sample_date'] = datetime.datetime.now(datetime.datetime.now().astimezone().tzinfo)
+        row['sample_date'] = event_raw['sample_date'] \
+            if 'sample_date' in event_raw \
+            else pd.to_datetime(datetime.datetime.now(datetime.datetime.now().astimezone().tzinfo))
         return row
 
     def parse_events_to_df(self, events_raw):
@@ -193,8 +197,8 @@ class TicketMaster():
         row_out['time_of_day'] = event['event_date'].hour
         row_out['on_sale_period'] = (event['event_date'] - event['on_sale_date']).total_seconds() / 60 / 60 / 24
         row_out['days_to_event'] = (event['event_date'] - event[
-            'sample_date']).total_seconds() / 60 / 60 / 24
-        row_out['days_on_sale'] = (event['sample_date'] - event[
+            'sample_date'].to_pydatetime()).total_seconds() / 60 / 60 / 24
+        row_out['days_on_sale'] = (event['sample_date'].to_pydatetime() - event[
             'on_sale_date']).total_seconds() / 60 / 60 / 24
         row_out['event_complete'] = row_out['days_to_event'] < 0
         if row_out['event_complete']:
@@ -205,9 +209,7 @@ class TicketMaster():
 
 if __name__=='__main__':
     tm = TicketMaster()
-    event_urls = ['https://www.ticketmaster.es/event/bon-iver-entradas/19775']
-    for url in event_urls:
-        events = tm.get_event_from_url(url)
+    tm.get_events()
     # json.dump(events,
     #             open('../../data/tickemaster_'+str(len(events))+'_event_scrap_'+datetime.datetime.now().strftime('%d-%m-%Y')+'.pkl','wb'))
     # print('All data downloaded')

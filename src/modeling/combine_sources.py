@@ -7,31 +7,48 @@ import src.data_sources.demographics as demographics
 import src.data_sources.ticketmaster as ticketmaster
 import numpy as np
 import sys
+import time
 import pickle
-debug = False
+from multiprocessing.pool import ThreadPool
+from multiprocessing.pool import Pool
+from threading import Thread
+from queue import Queue, Empty
+debug = True
+
+
+def add_songkick_threaded(df):
+    num_splits = 4
+    dfs = np.array_split(df, num_splits)
+    pool = Pool(processes=num_splits)
+    sk_dfs = pool.map(add_songkick, dfs)
+    return pd.concat(sk_dfs)
 
 
 def add_songkick(df):
     sk = songkick.SongKick()
     sk_cont = []
     print('running sk for ', df.shape[0],'records')
+    idx_real = -1
     for idx, row in df.iterrows():
-        if np.mod(idx, np.floor(df.shape[0] / 10)) == 0:
-            print('SK is', 100 * idx / df.shape[0], 'percent complete')
+        idx_real += 1
+        if np.mod(idx_real, np.floor(df.shape[0] / 10)) == 0:
+            print('SK is', np.floor(100 * idx_real / df.shape[0]), 'percent complete')
         try:
             venue_series = sk.get_songkick_data_for_event(row)
         except KeyboardInterrupt:
+            print('------------keyboard interrupt------------')
             return
         except BaseException as e:
             if not debug:
-                print(e)
+                print(idx, e)
                 continue
             else:
                 raise
         venue_series['idx'] = idx
         sk_cont.append(venue_series)
-    sk_df = pd.concat(sk_cont, axis=1, sort=True).T
+    sk_df = pd.concat(sk_cont, axis=1).T
     sk_df = sk_df.set_index('idx')
+    sk_df.to_csv('please_work_sk.csv')
     return sk_df
 
 
@@ -81,21 +98,73 @@ def add_time_features(df):
     tm_df = tm_df.set_index('idx')
     return tm_df
 
-def add_local_popularity(df):
-    gt = google_trends.Trends()
+def add_local_popularity(df, basedate):
+    num_splits = 5
+    try:
+        existing_df = pd.read_pickle('../../data/trends_'+basedate+'.pkl')
+        already_done = df.index.isin(existing_df.index)
+        not_done_df = df.loc[~already_done, :]
+    except FileNotFoundError:
+        not_done_df = df
+
+    print('total records are', df.shape[0],'with')
+    print(not_done_df.shape[0], 'records not done')
+    dfs = np.array_split(not_done_df, num_splits)
+    q_in = Queue(maxsize=num_splits*3)
+    q_out = Queue()
+    pg = google_trends.ProxyGrenerator(q_in)
+    thread_cont = []
+    tr_dfs_cont = []
+    for thread_idx in range(num_splits):
+        th = Thread(target=local_pop_thread_run, args=(dfs[thread_idx], q_in, q_out))
+        th.start()
+        thread_cont.append(th)
+
+    all_alive = True
+    last_proxy_ticker = 0
+    while all_alive:
+        for thread in thread_cont:
+            all_alive &= thread.isAlive()
+        pg.check_for_new_proxies()
+        last_proxy_ticker += 1
+        if last_proxy_ticker > 60:
+            pg.save_proxylist()
+            last_proxy_ticker = 0
+        try:
+            new_data = q_out.get_nowait()
+        except Empty:
+            time.sleep(1)
+            continue
+        tr_dfs_cont.append(new_data)
+        tr_df = pd.concat(tr_dfs_cont, sort=True)
+        tr_df.to_pickle('../../data/trends_' + basedate + '.pkl')
+        time.sleep(1)
+    return pd.concat(tr_dfs_cont, sort=True)
+
+
+def local_pop_thread_run(df, q_in, q_out):
+    gt = google_trends.Trends(q_in)
     gt_cont = []
     print('running popularity for ', df.shape[0], 'records')
+    idx_real = 0
     for idx, row in df.iterrows():
-        if np.mod(idx, np.floor(df.shape[0] / 10)) == 0:
-            print('Trends is', 100 * idx / df.shape[0], 'percent complete')
+        idx_real += 1
+        if np.mod(idx_real, 20) == 0:
+            print('Got 20, returning to main loop')
+            gt_df = pd.concat(gt_cont, axis=1).T
+            gt_df = gt_df.set_index('idx')
+            q_out.put(gt_df)
+            gt_cont = []
         try:
             row_out = gt.get_geo_trends(row['performers'], 'today 5-y', gt.get_iso_region(row['lat'],row['long']))
             row_out['idx'] = idx
             gt_cont.append(row_out)
+        except ValueError as e:
+            print('Got ValueError:', e)
+            continue
         except KeyboardInterrupt:
             return
-        except BaseException as e:
-            raise e
+        except Exception as e:
             print(idx)
             if not debug:
                 print(e)
@@ -104,7 +173,7 @@ def add_local_popularity(df):
                 raise
     gt_df = pd.concat(gt_cont, axis=1).T
     gt_df = gt_df.set_index('idx')
-    return gt_df
+    q_out.put(gt_df)
 
 def add_availability(df):
     tm = ticketmaster.TicketMaster()
@@ -182,7 +251,7 @@ if __name__ == '__main__':
         df.to_pickle('../../data/events_and_avail_'+basedate+'.pkl')
     if routine == 'songkick':
         df_events = pd.read_pickle('../../data/events_and_avail_' + basedate + '.pkl')
-        df = add_songkick(df_events)
+        df = add_songkick_threaded(df_events)
         df.to_pickle('../../data/songkick_'+basedate+'.pkl')
     if routine == 'time':
         df_events = pd.read_pickle('../../data/events_and_avail_' + basedate + '.pkl')
@@ -190,7 +259,7 @@ if __name__ == '__main__':
         df.to_pickle('../../data/time_'+basedate+'.pkl')
     if routine == 'popularity':
         df_events = pd.read_pickle('../../data/events_and_avail_' + basedate + '.pkl')
-        df = add_local_popularity(df_events)
+        df = add_local_popularity(df_events, basedate)
         df.to_pickle('../../data/popularity_'+basedate+'.pkl')
     if routine == 'demographics':
         df_events = pd.read_pickle('../../data/events_and_avail_' + basedate + '.pkl')
@@ -198,8 +267,8 @@ if __name__ == '__main__':
         df.to_pickle('../../data/demographics_'+basedate+'.pkl')
     if routine == 'combine':
         df_base = pd.read_pickle('../../data/events_and_avail_' + basedate + '.pkl')
-        for table in ['demographics','popularity','songkick','time']:
+        for table in ['demographics','songkick','time']:
             df = pd.read_pickle('../../data/'+table+'_'+basedate+'.pkl')
             df_base = pd.merge(df_base, df, right_index=True, left_index=True)
-        df.to_pickle('../../data/combined_'+basedate+'.pkl')
+        df_base.to_pickle('../../data/combined_'+basedate+'.pkl')
 
