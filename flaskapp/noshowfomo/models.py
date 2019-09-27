@@ -1,6 +1,6 @@
-from src.modeling.classifiers import NoFomoRandomForest, NoFomoXGBoost
+from src.modeling.classifiers import NoFomoXGBoost, NoFomoLogRegression, NoFomoRandomForest
 from src.modeling.data_pipeline import DataPipeline
-model = NoFomoXGBoost(name='testing', load=True)
+model = NoFomoRandomForest(name='model_search', load=True)
 pipeline = DataPipeline()
 
 def predict_from_url(url):

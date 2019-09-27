@@ -14,13 +14,6 @@ import pickle
 from collections import deque
 import numpy as np
 
-
-#region_iso was not found: NO-50
-# available regions are was not found: Index(['NO-02', 'NO-09', 'NO-06', 'NO-20', 'NO-04', 'NO-12', 'NO-15', 'NO-17',
-#        'NO-18', 'NO-05', 'NO-03', 'NO-01', 'NO-11', 'NO-14', 'NO-16', 'NO-08',
-#        'NO-19', 'NO-10', 'NO-07'],
-
-
 class ProxyGrenerator():
     def __init__(self, q_out: queue.Queue):
         self.q_out = q_out
@@ -135,9 +128,9 @@ class Trends():
                 '30':'WP',
                 '32':'ZP',
             },
-            # 'NO':{'23':'16',
-            #       '50':'16'}
-        },
+            'NO':{'23':'16',
+                  '50':'16'}
+        }
         self.login()
 
     def login(self):
@@ -175,8 +168,10 @@ class Trends():
         codes = [code for code in ret['codes'] if code['type']=='ISO3166-2']
         region_code = sorted(codes, key=lambda x: x['level'])[0]['code']
         if ret['countryCode'] in self.region_map:
-            if region_code not in self.region_map[ret['countryCode']].values():
-                region_code = self.region_map[ret['countryCode']][region_code]
+            spec_region_map = self.region_map[ret['countryCode']]
+            if region_code not in spec_region_map.values():
+                if region_code in spec_region_map:
+                    region_code = self.region_map[ret['countryCode']][region_code]
         region = ret['countryCode'] + '-' + region_code
         return region
 

@@ -7,6 +7,7 @@ import pytz
 import os
 import numpy as np
 import pickle
+from forex_python.converter import CurrencyRates
 import time
 my_file = os.path.abspath(os.path.dirname('__file__'))
 
@@ -16,6 +17,7 @@ class TicketMaster():
     def __init__(self):
         #self.tzwhere = tzwhere.tzwhere()
         self.base = 'https://app.ticketmaster.eu/mfxapi/v2/'
+        self.currency_convert_base = ''
         self.api_key = os.environ['ticketmaster_api_key']
         self.default_params = '&lang=en-en'+\
                               '&category_ids=10001' +\
@@ -28,6 +30,7 @@ class TicketMaster():
         self.site_to_domain_map = {}
         self.city_to_city_map = {}
         self.country_to_country_map = {}
+        self.forex = CurrencyRates()
         self.get_domain_maps(load=True, save=False)
 
 
@@ -38,6 +41,7 @@ class TicketMaster():
                 return
             except FileNotFoundError:
                 pass
+        print('Building new map for cities')
         ret = json.loads(self.req.get(self.base+'domains?apikey='+self.api_key).content)
         for dom in ret['domains']:
             self.site_to_domain_map[dom['site_url'].replace('.co','')] = dom['id']
@@ -117,13 +121,18 @@ class TicketMaster():
             return avail
         for price_type in ret['event']['price_types']:
             if price_type['regular']:
+                if 'currency' in event_row:
+                    convertion_rate = self.forex.get_rate(event_row['currency'], 'USD')
+                else:
+                    convertion_rate = np.nan
                 price_levels = pd.DataFrame(price_type['price_levels']).sort_values('face_value', ascending=False)
                 avail['avail_first_tier'] = price_levels.iloc[0]['availability']
+                avail['price_first_tier'] = price_levels.iloc[0]['face_value']*convertion_rate
+                avail['price_mean'] = price_levels['face_value'].mean()*convertion_rate
+                avail['price_median'] = price_levels['face_value'].median()*convertion_rate
                 avail['avail_mode'] = price_levels['availability'].mode()[0]
-                if price_levels.shape[0] > 0:
-                    avail['avail_last_tier'] = price_levels.iloc[-1]['availability']
-                else:
-                    avail['avail_last_tier'] = None
+                avail['price_last_tier'] = price_levels.iloc[-1]['face_value'] * convertion_rate
+                avail['avail_last_tier'] = price_levels.iloc[-1]['availability']
                 avail['avail_some_sold_out'] = bool((price_levels['availability']=='none').any())
                 avail['avail_all_sold_out'] = bool((price_levels['availability']=='none').all())
                 avail['avail_percent_sold_out_types'] = sum(price_levels['availability']=='none')/price_levels.shape[0]
@@ -155,8 +164,8 @@ class TicketMaster():
         row['event_date'] = eventdate
         row['currency'] = event_raw['currency']
         row['sold_out'] = event_raw['properties']['sold_out']
-        if event_raw['properties']['cancelled'] or event_raw['properties']['rescheduled']:
-            return None
+        # if event_raw['properties']['cancelled'] or event_raw['properties']['rescheduled']:
+        #     return None
         row['seats_available'] = event_raw['properties']['seats_available']
         address = event_raw['venue']['location']['address']
         row['lat'] = address['lat'] if 'lat' in address else None
@@ -209,12 +218,15 @@ class TicketMaster():
 
 if __name__=='__main__':
     tm = TicketMaster()
-    tm.get_events()
+    #tm.get_events()
     # json.dump(events,
     #             open('../../data/tickemaster_'+str(len(events))+'_event_scrap_'+datetime.datetime.now().strftime('%d-%m-%Y')+'.pkl','wb'))
     # print('All data downloaded')
-    # events = pickle.load(open('../../data/tickemaster_7489_event_scrap_15-09-2019.pkl','rb'))
+    #events = pickle.load(open('../../data/tickemaster_7489_event_scrap_15-09-2019.pkl','rb'))
     # events_df = tm.parse_events_to_df(events)
     # print('All data parsed')
     # events_df.to_csv(os.path.join(my_file,'../../data/ticketmaster'+datetime.datetime.now().strftime('%d-%m-%Y')+'.csv'), index=False)
     # events_df.to_pickle(os.path.join(my_file,'../../data/ticketmaster'+datetime.datetime.now().strftime('%d-%m-%Y')+'.pkl'))
+    events = pd.read_pickle('../../data/events_22-09-2019.pkl')
+    avail = tm.add_availability_info(events.iloc[4])
+    print(avail)

@@ -2,20 +2,22 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 import numpy as np
+days_of_week = ['Mon','Tue','Wed','Thur','Fri','Sat', 'Sun']
 
 
 def plot_week_day_effect(DV, data):
-    # sns.countplot(x=DV, hue='day_of_week', data=data)
-    # plt.show()
+    sns.countplot(x=DV, hue='day_of_week', data=data)
+    plt.show()
 
     data_per_weekday_and_type = data.groupby([DV, 'day_of_week']).count()['ticketmaster_event_id']
     data_per_weekday_and_type.name = 'count'
     data_per_weekday_and_type = data_per_weekday_and_type.reset_index()
     data_per_weekday = data_per_weekday_and_type.reset_index().groupby('day_of_week').sum().reset_index()
     data_per_weekday = data_per_weekday.rename({'count': 'total'}, axis=1)
-    counts = pd.merge(data_per_weekday_and_type, data_per_weekday, on='day_of_week')
+    counts = pd.merge(data_per_weekday_and_type, data_per_weekday.drop(DV, axis=1), on='day_of_week')
     counts['percent'] = counts['count'] / counts['total']
-    sns.barplot(x='day_of_week', y='percent', data=counts.loc[counts[DV] == 'sold_out', :])
+    counts[DV] = counts[DV].map({1.0:'sold_out', 0.0: 'available'})
+    sns.barplot(x='day_of_week', y='percent', data=counts.loc[counts[DV]=='sold_out', :], order=days_of_week)
     plt.show()
 
 def report_nans(IVs, data):

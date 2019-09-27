@@ -9,33 +9,38 @@ import numpy as np
 import sys
 import time
 import pickle
-from multiprocessing.pool import ThreadPool
 from multiprocessing.pool import Pool
 from threading import Thread
 from queue import Queue, Empty
-debug = False
+debug = True
 
 
-def add_songkick_threaded(df):
+def add_songkick_threaded(df, basedate):
     num_splits = 4
     dfs = np.array_split(df, num_splits)
     pool = Pool(processes=num_splits)
-    names = [str(i) for i in range(num_splits)]
-    sk_dfs = pool.map(add_songkick, (zip(dfs, names), basedate))
+    names = ['_thread'+str(i)+'_' for i in range(num_splits)]
+    basedate = [basedate]*num_splits
+    sk_dfs = pool.starmap(add_songkick, zip(dfs, basedate, names))
     return pd.concat(sk_dfs)
 
 
-def add_songkick(df, basedate):
-    if isinstance(df, tuple):
-        df = df[0]
-        thread_name = '_'+df[1]+'_'
-    else:
-        thread_name = ''
+def add_demographics_threaded(df, basedate):
+    num_splits = 4
+    dfs = np.array_split(df, num_splits)
+    pool = Pool(processes=num_splits)
+    names = ['_thread'+str(i)+'_' for i in range(num_splits)]
+    basedate = [basedate]*num_splits
+    sk_dfs = pool.starmap(add_demographics, zip(dfs, basedate, names))
+    return pd.concat(sk_dfs)
+
+
+def add_songkick(df, basedate, thread_name=''):
     try:
-        existing_df = pd.read_pickle('../../data/songkick_temp' + basedate + '.pkl').set_index('idx')
+        existing_df = pd.read_pickle('../../data/songkick_temp' + basedate + '.pkl')
         already_done = df.index.isin(existing_df.index)
         not_done_df = df.loc[~already_done, :]
-        existing_df = existing_df.reset_index()
+        #existing_df = existing_df.reset_index()
 
     except FileNotFoundError:
         not_done_df = df
@@ -53,7 +58,7 @@ def add_songkick(df, basedate):
             print('SK is', np.floor(100 * idx_real / not_done_df.shape[0]), 'percent complete')
             sk_df = pd.concat(sk_cont, axis=1).T
             sk_df = pd.concat([sk_df, existing_df])
-            #sk_df = sk_df.set_index('idx')
+            sk_df = sk_df.set_index('idx')
             sk_df.to_pickle('../../data/songkick_temp'+basedate+thread_name+'.pkl')
         try:
             venue_series = sk.get_songkick_data_for_event(row)
@@ -133,24 +138,25 @@ def add_local_popularity(df, basedate, use_proxies):
         not_done_df = df
         existing_df = pd.DataFrame()
 
-    print('total records are', df.shape[0],'with')
+    print('total records are', df.shape[0], 'with')
     print(not_done_df.shape[0], 'records not done')
-    dfs = np.array_split(not_done_df, num_splits)
+    print('already_done', existing_df.shape)
+    dfs = np.array_split(not_done_df.reset_index().rename(columns={'index':'idx'}), num_splits)
     q_in = Queue(maxsize=num_splits*3)
     q_out = Queue()
     pg = google_trends.ProxyGrenerator(q_in)
     thread_cont = []
     tr_dfs_cont = [existing_df]
     for thread_idx in range(num_splits):
-        th = Thread(target=local_pop_thread_run, args=(dfs[thread_idx], q_in, q_out, use_proxies))
+        th = Thread(target=local_pop_thread_run, args=(dfs[thread_idx].set_index('idx'), q_in, q_out, use_proxies))
         th.start()
         thread_cont.append(th)
 
-    all_alive = True
+    some_alive = True
     last_proxy_ticker = 0
-    while all_alive:
+    while some_alive:
         for thread in thread_cont:
-            all_alive &= thread.isAlive()
+            some_alive |= thread.isAlive()
         if use_proxies:
             pg.check_for_new_proxies()
             last_proxy_ticker += 1
@@ -162,6 +168,7 @@ def add_local_popularity(df, basedate, use_proxies):
         except Empty:
             time.sleep(1)
             continue
+        print('Got new data')
         tr_dfs_cont.append(new_data)
         tr_df = pd.concat(tr_dfs_cont, sort=True)
         tr_df.to_pickle('../../data/trends_' + basedate + '.pkl')
@@ -173,6 +180,8 @@ def local_pop_thread_run(df, q_in, q_out, use_proxy):
     gt = google_trends.Trends(q_in, use_proxy=use_proxy)
     gt_cont = []
     print('running popularity for ', df.shape[0], 'records')
+    if df.shape[0] == 0:
+        return
     idx_real = 0
     for idx, row in df.iterrows():
         idx_real += 1
@@ -181,6 +190,7 @@ def local_pop_thread_run(df, q_in, q_out, use_proxy):
             gt_df = pd.concat(gt_cont, axis=1).T
             gt_df = gt_df.set_index('idx')
             q_out.put(gt_df)
+            print('on q')
             gt_cont = []
         try:
             row_out = gt.get_geo_trends(row['performers'], 'today 5-y', gt.get_iso_region(row['lat'],row['long']))
@@ -198,9 +208,11 @@ def local_pop_thread_run(df, q_in, q_out, use_proxy):
                 continue
             else:
                 raise
-    gt_df = pd.concat(gt_cont, axis=1).T
-    gt_df = gt_df.set_index('idx')
-    q_out.put(gt_df)
+
+    if len(gt_cont)>0:
+        gt_df = pd.concat(gt_cont, axis=1).T
+        gt_df = gt_df.set_index('idx')
+        q_out.put(gt_df)
 
 def add_availability(df):
     tm = ticketmaster.TicketMaster()
@@ -233,14 +245,31 @@ def parse_events(events):
     print('Got', events.shape[0],'records')
     return events
 
-def add_demographics(df):
+def add_demographics(df, basedate, thread_name=''):
+    print('I am', thread_name)
+    try:
+        existing_df = pd.read_pickle('../../data/demographics_temp' + basedate + thread_name +'.pkl')
+        already_done = df.index.isin(existing_df.index)
+        not_done_df = df.loc[~already_done, :]
+
+    except FileNotFoundError:
+        print('No data already done')
+        not_done_df = df
+        existing_df = pd.DataFrame()
+
     tm = ticketmaster.TicketMaster()
     dg = demographics.Demographics(tm.city_to_city_map, tm.country_to_country_map)
     dg_cont = []
     print('running demo for ', df.shape[0], 'records')
-    for idx, row in df.iterrows():
-        if np.mod(idx, np.floor(df.shape[0] / 10)) == 0:
-            print('Demo is', 100 * idx / df.shape[0], 'percent complete')
+    real_idx = 0
+    for idx, row in not_done_df.iterrows():
+        real_idx += 1
+        if np.mod(real_idx, np.floor(not_done_df.shape[0] / 100)) == 0:
+            print('Demo '+thread_name+'is', 100 * real_idx / not_done_df.shape[0], 'percent complete')
+            dg_df = pd.concat(dg_cont, axis=1).T
+            dg_df = pd.concat([dg_df, existing_df])
+            dg_df = dg_df.set_index('idx')
+            dg_df.to_pickle('../../data/demographics_temp'+basedate+thread_name+'.pkl')
         try:
             row_out = dg.get_pop(row['city'], row['country'])
             row_out['idx'] = idx
@@ -254,6 +283,7 @@ def add_demographics(df):
             else:
                 raise
     dg_df = pd.concat(dg_cont, axis=1).T
+    dg_df = pd.concat([dg_df, existing_df])
     dg_df = dg_df.set_index('idx')
     return dg_df
 
@@ -278,7 +308,7 @@ if __name__ == '__main__':
         df.to_pickle('../../data/events_and_avail_'+basedate+'.pkl')
     if routine == 'songkick':
         df_events = pd.read_pickle('../../data/events_and_avail_' + basedate + '.pkl')
-        df = add_songkick(df_events, basedate)
+        df = add_songkick_threaded(df_events, basedate)
         df.to_pickle('../../data/songkick_'+basedate+'.pkl')
     if routine == 'time':
         df_events = pd.read_pickle('../../data/events_and_avail_' + basedate + '.pkl')
@@ -290,11 +320,11 @@ if __name__ == '__main__':
         df.to_pickle('../../data/popularity_'+basedate+'.pkl')
     if routine == 'demographics':
         df_events = pd.read_pickle('../../data/events_and_avail_' + basedate + '.pkl')
-        df = add_demographics(df_events)
+        df = add_demographics_threaded(df_events, basedate)
         df.to_pickle('../../data/demographics_'+basedate+'.pkl')
     if routine == 'combine':
         df_base = pd.read_pickle('../../data/events_and_avail_' + basedate + '.pkl')
-        for table in ['demographics','songkick','time']:
+        for table in ['demographics','songkick','time', 'popularity']:
             df = pd.read_pickle('../../data/'+table+'_'+basedate+'.pkl')
             df_base = pd.merge(df_base, df, right_index=True, left_index=True)
         df_base.to_pickle('../../data/combined_'+basedate+'.pkl')

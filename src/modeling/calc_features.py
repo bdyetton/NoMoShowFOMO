@@ -17,28 +17,47 @@ fill_na_dict['total_times_played_locally'] = 0
 fill_na_dict['sk_popularity'] = -1
 
 def features_for_data_point(data_point):
-    data_point['weekend_event'] = data_point['day_of_week'] in ('Sat', 'Sun')
-    data_point['mid_week_event'] = data_point['day_of_week'] in ['Wed', 'Tues', 'Mon']
+
+    if isinstance(data_point, pd.Series):
+        data_point['weekend_event'] = data_point['day_of_week'] in ('Sat', 'Sun')
+        data_point['mid_week_event'] = data_point['day_of_week'] in ['Wed', 'Tues', 'Mon']
+        data_point['sat_event'] = data_point['day_of_week'] in ['Sat']
+        data_point['fri_event'] = data_point['day_of_week'] in ('Fri',)
+        data_point['fri_sat_event'] = data_point['day_of_week'] in ('Fri','Sat')
+        data_point['early_week_event'] = data_point['day_of_week'] in ['Tues', 'Mon']
+    else:
+        data_point['weekend_event'] = data_point['day_of_week'].isin(('Sat', 'Sun'))
+        data_point['mid_week_event'] = data_point['day_of_week'].isin(['Wed', 'Tues', 'Mon'])
+        data_point['sat_event'] = data_point['day_of_week'].isin(('Sat',))
+        data_point['fri_event'] = data_point['day_of_week'].isin(('Fri',))
+        data_point['fri_sat_event'] = data_point['day_of_week'].isin(('Fri','Sat'))
+        data_point['early_week_event'] = data_point['day_of_week'].isin(['Tues', 'Mon'])
 
     # Also, lets normalize capacity
     data_point['venue_capacity_norm'] = data_point['venue_capacity'] / data_point['population_city']
     data_point['popularity_country_norm'] = data_point['venue_capacity'] / data_point['population_country']
     data_point['popularity_region_norm'] = data_point['venue_capacity'] / data_point['population_city']
     data_point['popularity_in_country_resid'] = data_point['popularity_in_country'] - data_point['popularity_in_region']
+    data_point['price_mean_normalized'] = data_point['price_mean']/data_point['gdp_country']
+    data_point['price_median_normalized'] = data_point['price_median']/data_point['gdp_country']
+    #data_point['price_last_normalized'] = data_point['price_mean']/data_point['gdp_country']
 
     return data_point
 
 def fill_na(df):
-    for k,v in fill_na_dict.items():
-        if isinstance(df[k], pd.Series):
-            df[k] = df[k].fillna(v)
-        else:
+    if isinstance(df, pd.DataFrame):
+        for k,v in fill_na_dict.items():
+            if k in df:
+                df[k] = df[k].fillna(v)
+    else:
+        for k, v in fill_na_dict.items():
+
             if pd.isna(df[k]):
                 df[k] = np.nan
-    return df.fillna(np.nan)
+    return df
 
 def features_for_dataset(df):
-    df = df.apply(features_for_data_point, axis=1)
+    df = features_for_data_point(df)
     return df
 
 if __name__ == '__main__':
