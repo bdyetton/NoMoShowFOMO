@@ -29,8 +29,9 @@
               <h1 class="h6 mb-3 font-weight-normal">Check if an upcoming concert will sell out</h1>
               <form class="form-text" action="/output" method="GET">
                   <div class="form-group">
+                      <div style="border-bottom: 1px"><i>Enter a Ticketmaster URL:</i></div>
                     <label for="input_url" class="sr-only">Enter a Ticketmaster URL</label>
-                    <input type="text" id="input_url" name="input_url" class="form-control" placeholder="Ticketmaster URL" required="" autofocus="">
+                    <input type="text" id="input_url" name="input_url" class="form-control" value="www.ticketmaster.nl/event/236761" required="" autofocus="">
                     <button class="btn btn-lg btn-primary btn-block" type="submit" onclick="Pace.start()">Relieve my <i>#FOMO</i></button>
                   </div>
               </form>

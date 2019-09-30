@@ -71,7 +71,7 @@ def optimize_feature_set():
                                'gdp_country',
                                'time_of_day',
                                'on_sale_period',
-                               'days_to_event',
+                               #'days_to_event',
                                'sat_event',
                                'early_week_event'],
 
@@ -87,7 +87,7 @@ def optimize_feature_set():
                               'gdp_country',
                               'time_of_day',
                               'on_sale_period',
-                              'days_to_event',
+                              #'days_to_event',
                               'fri_sat_event'],
 
         'with_price_and_gdp': ['sk_popularity',
@@ -102,7 +102,7 @@ def optimize_feature_set():
                                'gdp_country',
                                'time_of_day',
                                'on_sale_period',
-                               'days_to_event',
+                               #'days_to_event',
                                'weekend_event',
                                'mid_week_event'],
     }
@@ -147,7 +147,7 @@ def optimize_model_type():
            'gdp_country',
            'time_of_day',
            'on_sale_period',
-           'days_to_event',
+           #'days_to_event',
            'weekend_event',
            'mid_week_event']
 
@@ -179,20 +179,21 @@ def optimize_model_type():
     model_fit_df.to_csv('../../results/Models_Fit_' + DV + '_' + basedate + '.csv', )
 
 if __name__ == '__main__':
-    # model = classifiers.NoFomoXGBoost(name='with_week_changes', load=True)
-    # model.interpret_features()
+    # model = classifiers.NoFomoXGBoost(name='model_search', load=True) #with_week_changes
+    # #model.interpret_features()
+    #
+    # basedate = '22-09-2019'
+    # data = pd.read_pickle('../../data/combined_' + basedate + '.pkl')
+    # data['avail_status'] = data['avail_some_sold_out'].map({True: 1, False: 0})
+    # data = data.fillna(np.nan)
+    # data = calc_features.features_for_dataset(data)
+    # data = calc_features.fill_na(data)
+    # #vis_data(data, DV, cat_IVs, cont_IVs)
+    # data = data[model.IVs + [model.DV] + ['days_on_sale']].dropna()
+    # #visualization.plot_week_day_effect(model.DV, data)
+    # model.shap_explain(data)
 
-    #basedate = '22-09-2019'
-    #data = pd.read_pickle('../../data/combined_' + basedate + '.pkl')
-    #data['avail_status'] = data['avail_some_sold_out'].map({True: 1, False: 0})
-    #data = data.fillna(np.nan)
-    #data = calc_features.features_for_dataset(data)
-    #data = calc_features.fill_na(data)
-    # vis_data(data, DV, cat_IVs, cont_IVs)
-    #data = data[model.IVs + [model.DV] + ['days_on_sale']].dropna()
-    #visualization.plot_week_day_effect(model.DV, data)
-    #model.shap_explain(data)
-    #optimize_model_type()
-    optimize_feature_set()
+    optimize_model_type()
+    #optimize_feature_set()
 
 

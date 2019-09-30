@@ -139,5 +139,8 @@ class NoFomoXGBoost(BaseClassifier):
     def shap_explain(self, data):
         shap_values = shap.TreeExplainer(self.model).shap_values(data[self.IVs])
         shap.summary_plot(shap_values, data[self.IVs])
+        plt.show()
+        shap.summary_plot(shap_values, data[self.IVs], plot_type='bar')
+
         #plt.gcf().subplots_adjust(left=1)
         plt.show()
