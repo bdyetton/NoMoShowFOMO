@@ -27,6 +27,6 @@ def output():
   print('Got-------', ticketmaster_url)
   will_sell_out, artist, venue, city, country, event_url = predict_from_url(ticketmaster_url)
 
-  return render_template("go.html", artist=artist,
+  return render_template("output.html", artist=artist,
                          venue=venue, city=city,
                          country=country, will_sell_out=will_sell_out, event_url=event_url)
