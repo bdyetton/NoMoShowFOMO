@@ -1,41 +1,198 @@
-<html lang="en" class="gr__getbootstrap_com"><head>
+<html lang="en" class="gr__getbootstrap_com">
+<head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="description" content="">
     <meta name="author" content="">
-    <link rel="icon" href="/docs/4.1/assets/img/favicons/favicon.ico">
+    <link rel="icon" href="../static/assets/yetti_clean.png">
 
-    <title>No Mo' Show FOMO: Predict when concerts will sell out!</title>
+    <title>DataYetti: Data, music and sleep</title>
 
-    <link rel="canonical" href="https://getbootstrap.com/docs/4.1/examples/sign-in/">
+    <link rel="canonical" href="https://getbootstrap.com/docs/4.1/examples/album/">
 
     <!-- Bootstrap core CSS -->
-    <link href="../static/css/bootstrap.min.css" rel="stylesheet">
+    <link href="../static/css/bootstrap.css" rel="stylesheet">
 
-    <!-- Custom styles for this template -->
-    <script type="text/javascript" src="../static/js/pace.min.js"></script>
-    <link href="../static/css/starter-template.css" rel="stylesheet">
 
-  </head>
-
-  <body class="text-center" data-gr-c-s-loaded="true">
-    <br>
-    <br>
-        <div style="width: 300px; margin: 0 auto">
-              <img class="mb-4" src="../static/assets/rock_on_emoji.png" alt="" width="62" height="62">
-              <img class="mb-4" src="../static/assets/happy_eye_closed.png" alt="" width="82" height="82">
-              <img class="mb-4" src="../static/assets/rock_on_emoji_right.png" alt="" width="62" height="62">
-              <h1 class="h3 mb-3 font-weight-normal">No Mo' Show FOMO</h1>
-              <h1 class="h6 mb-3 font-weight-normal">Check if an upcoming concert will sell out</h1>
-              <form class="form-text" action="/output" method="GET">
-                  <div class="form-group">
-                      <div style="border-bottom: 1px"><i>Enter a Ticketmaster URL:</i></div>
-                    <label for="input_url" class="sr-only">Enter a Ticketmaster URL</label>
-                    <input type="text" id="input_url" name="input_url" class="form-control" value="www.ticketmaster.nl/event/236761" required="" autofocus="">
-                    <button class="btn btn-lg btn-primary btn-block" type="submit" onclick="Pace.start()">Relieve my <i>#FOMO</i></button>
-                  </div>
-              </form>
-              <p class="mt-5 mb-3 text-muted">© 2019 Ben Yetton</p>
+</head>
+<body data-gr-c-s-loaded="true">
+<header>
+    <div class="bg-dark collapse" id="navbarHeader" style="">
+        <div class="container">
+            <div class="row">
+                <div class="col-sm-8 col-md-7 py-4">
+                    <h4 class="text-white">About</h4>
+                    <p class="text-muted">I'm a New Zealand born, San Francisco based Data Scientist, with a background both robotic
+                        engineering and cognitive science (focusing on sleep and memory) and a love for live music. Feel free to reach out on
+                        social if you have any comments on my work or interesting problems you'd like to share</p>
+                </div>
+                <div class="col-sm-4 offset-md-1 py-4">
+                    <h4 class="text-white">Contact</h4>
+                    <ul class="list-unstyled">
+                        <li><img src="../static/assets/twitter-icon_square_128x128.png" width="20" height="20" />&nbsp;<a href="https://www.twitter.com/BYetton" class="text-white">@BYetton</a></li>
+                        <li><img src="../static/assets/linkedin-icon_square_128x128.png" width="20" height="20" />&nbsp;<a href="https://www.linkedin.com/in/benyetton" class="text-white">BenYetton</a></li>
+                        <li><img src="../static/assets/GitHub-Mark.png" width="20" height="20" />&nbsp;<a href="https://www.github.com/bdyetton" class="text-white">bdyetton</a></li>
+                        <li><img src="../static/assets/yetti_clean.png" width="20" height="20" />&nbsp;<a href="#" class="text-white">bdyetton{_}gmail{_}com</a></li>
+                    </ul>
+                </div>
+            </div>
         </div>
-  </body>
+    </div>
+    <div class="navbar navbar-dark bg-dark shadow-sm">
+        <div class="container d-flex justify-content-between">
+            <a href="#" class="navbar-brand d-flex align-items-center">
+                <img src="../static/assets/yetti_clean.png" width="25" height="25" />
+                <strong>DataYetti</strong>
+            </a>
+            <button class="navbar-toggler collapsed" type="button" data-toggle="collapse" data-target="#navbarHeader"
+                    aria-controls="navbarHeader" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+        </div>
+    </div>
+</header>
+
+<main role="main">
+
+    <section class="jumbotron text-center">
+        <div class="container">
+            <h1 class="jumbotron-heading">A website about data, music and sleep science.</h1>
+            <p class="lead text-muted">My name is Ben Yetton. I'm curious kiwi with a passion for all
+                things data science, especially probabilistic modeling and deep learning.
+            Check out some of my projects below.</p>
+        </div>
+    </section>
+
+    <div class="album py-5 bg-light">
+        <div class="container">
+
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="card mb-4 shadow-sm">
+                        <img class="card-img-top"
+                             alt="nomoshowfomo" style="height: 200px; width: 100%; display: block;"
+                             src="../static/assets/noshowfomo2.PNG"
+                             data-holder-rendered="true">
+                        <div class="card-body">
+                            <p class="card-text"><b>No Mo' Show FOMO</b>: An app to predict if an upcoming concert will sell out.</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <form class="form-text" action="/noshowfomo" method="GET">
+                                    <div class="form-group">
+                                        <div class="btn-group">
+                                            <button type="submit" class="btn btn-sm btn-outline-secondary" >Use the App</button>
+                                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="window.location.href = 'https://github.com/bdyetton/NoShowFOMO';">View code on Github</button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card mb-4 shadow-sm">
+                        <img class="card-img-top"
+                             alt="Thumbnail [100%x225]"
+                             src="../static/assets/moda.png"
+                             data-holder-rendered="true" style="height: 200px; width: 100%; display: block;">
+                        <div class="card-body">
+                            <p class="card-text"><b>MODA Sleep Spindles</b>: The highest validity dataset of sleep spindles from human EEG, now available to the public.</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="btn-group">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="window.location.href = 'https://osf.io/8bma7';" >View on OSF</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card mb-4 shadow-sm">
+                        <img class="card-img-top"
+                             alt="Thumbnail [100%x225]"
+                             src="../static/assets/thetesseract3.jpg"
+                             data-holder-rendered="true" style="height: 200px; width: 100%; display: block;">
+                        <div class="card-body">
+                            <p class="card-text"><b>The Tesseract</b>: A spinning, flashing, cube shaped DJ lighting system. </p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="btn-group">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="window.location.href = 'https://osf.io/8bma7';" >View on Github</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card mb-4 shadow-sm">
+                        <img class="card-img-top"
+                             alt="Thumbnail [100%x225]"
+                             src="../static/assets/rem_detector.png"
+                             data-holder-rendered="true" style="height: 225px; width: 100%; display: block;">
+                        <div class="card-body">
+                            <p class="card-text"><b>Yetton REM Detector</b>: the best Rapid Eye Movement feature detector available. Download for Matlab available.</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="btn-group">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="window.location.href = 'https://github.com/bdyetton/YettonEtAl_2015_REMDetector';" >View on Github</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card mb-4 shadow-sm">
+                        <img class="card-img-top"
+                             alt="Thumbnail [100%x225]"
+                             src="../static/assets/pysleep.png"
+                             data-holder-rendered="true" style="height: 225px; width: 100%; display: block;">
+                        <div class="card-body">
+                            <p class="card-text"><b>Pysleep [WIP]</b>: A python library for analyzing sleep. A work in progress.</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="btn-group">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="window.location.href = 'https://github.com/MednickLab/pysleep';" >View on Github</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card mb-4 shadow-sm">
+                        <img class="card-img-top"
+                             alt="Thumbnail [100%x225]"
+                             src="../static/assets/scholar.png"
+                             data-holder-rendered="true" style="height: 225px; width: 100%; display: block;">
+                        <div class="card-body">
+                            <p class="card-text"><b>Publication List</b>: 5 first author publications and counting.</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="btn-group">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="window.location.href = 'https://scholar.google.com/citations?user=8Jb8UKQAAAAJ';" >View on Google Scholar</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<footer class="text-muted">
+    <div class="container">
+        <p class="float-right">
+            <a href="#">Back to top</a>
+        </p>
+    </div>
+</footer>
+
+<!-- Bootstrap core JavaScript
+================================================== -->
+<!-- Placed at the end of the document so the pages load faster -->
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+        integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+        crossorigin="anonymous"></script>
+<script>window.jQuery || document.write('<script src="../../assets/js/vendor/jquery-slim.min.js"><\/script>')</script>
+<script src="../static/js/popper.min.js"></script>
+<script src="../static/js/bootstrap.min.js"></script>
+
+
+</body>
 </html>

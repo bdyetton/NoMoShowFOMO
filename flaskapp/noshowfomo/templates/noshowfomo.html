@@ -1,0 +1,41 @@
+<html lang="en" class="gr__getbootstrap_com"><head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="icon" href="/docs/4.1/assets/img/favicons/favicon.ico">
+
+    <title>No Mo' Show FOMO: Predict when concerts will sell out!</title>
+
+    <link rel="canonical" href="https://getbootstrap.com/docs/4.1/examples/sign-in/">
+
+    <!-- Bootstrap core CSS -->
+    <link href="../static/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <script type="text/javascript" src="../static/js/pace.min.js"></script>
+    <link href="../static/css/starter-template.css" rel="stylesheet">
+
+  </head>
+
+  <body class="text-center" data-gr-c-s-loaded="true">
+    <br>
+    <br>
+        <div style="width: 300px; margin: 0 auto">
+              <img class="mb-4" src="../static/assets/rock_on_emoji.png" alt="" width="62" height="62">
+              <img class="mb-4" src="../static/assets/happy_eye_closed.png" alt="" width="82" height="82">
+              <img class="mb-4" src="../static/assets/rock_on_emoji_right.png" alt="" width="62" height="62">
+              <h1 class="h3 mb-3 font-weight-normal">No Mo' Show FOMO</h1>
+              <h1 class="h6 mb-3 font-weight-normal">Check if an upcoming concert will sell out</h1>
+              <form class="form-text" action="/noshowfomo/go" method="GET">
+                  <div class="form-group">
+                      <div style="border-bottom: 1px"><i>Enter a Ticketmaster URL:</i></div>
+                    <label for="input_url" class="sr-only">Enter a Ticketmaster URL</label>
+                    <input type="text" id="input_url" name="input_url" class="form-control" value="www.ticketmaster.nl/event/236761" required="" autofocus="">
+                    <button class="btn btn-lg btn-primary btn-block" type="submit" onclick="Pace.start()">Relieve my <i>#FOMO</i></button>
+                  </div>
+              </form>
+              <p class="mt-5 mb-3 text-muted">© 2019 Ben Yetton</p>
+        </div>
+  </body>
+</html>

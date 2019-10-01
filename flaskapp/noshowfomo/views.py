@@ -15,18 +15,19 @@ from noshowfomo.models import predict_from_url
 
 @app.route('/')
 @app.route('/index')
-@app.route('/noshowfomo/')
-@app.route('/noshowfomo')
 def index():
     return render_template("index.html")
 
-@app.route('/output')
+@app.route('/noshowfomo')
+def noshowfomo():
+    return render_template("noshowfomo.html")
+
 @app.route('/noshowfomo/go')
-def output():
+def noshowfomogo():
   ticketmaster_url = request.args.get('input_url')
   print('Got-------', ticketmaster_url)
   will_sell_out, artist, venue, city, country, event_url = predict_from_url(ticketmaster_url)
 
-  return render_template("output.html", artist=artist,
+  return render_template("noshowfomogo.html", artist=artist,
                          venue=venue, city=city,
                          country=country, will_sell_out=will_sell_out, event_url=event_url)
