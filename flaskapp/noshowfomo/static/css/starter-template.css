@@ -82,3 +82,13 @@ body {
   0% { transform: rotate(0deg); transform: rotate(0deg); }
   100% { transform: rotate(360deg); transform: rotate(360deg); }
 }
+
+/*div#loading {*/
+    /*width: 300px;*/
+    /*height: 300px;*/
+    /*display: block;*/
+    /*background-image: url(../assets/fear_emoji.png);*/
+    /*background-repeat: no-repeat;*/
+    /*background-size: contain;*/
+    /*cursor: wait;*/
+    /*}*/
