@@ -37,6 +37,9 @@ class BaseClassifier():
     def predict_single(self, data_point):
         return self.model.predict(data_point[self.IVs].values.reshape(1, -1))[0] == 'sold_out'
 
+    def predict_proba_single(self, data_point):
+        return self.model.predict_proba(data_point[self.IVs].values.reshape(1, -1))[0][0]*100
+
     def score(self, data):
         acc = self.model.score(data[self.IVs], data[self.DV].values.ravel())
         print('Accuracy: %f\n' % acc)

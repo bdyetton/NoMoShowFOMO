@@ -5,7 +5,9 @@ pipeline = DataPipeline()
 
 def predict_from_url(url):
     data_point = pipeline.data_point_from_url(url)
-    prediction = model.predict_single(data_point)
+    #prediction = model.predict_single(data_point)
+    prediction = model.predict_proba_single(data_point)
+
     return prediction, \
            data_point['performers'], \
            data_point['venue'], \

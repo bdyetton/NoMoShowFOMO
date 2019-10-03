@@ -163,7 +163,7 @@ class Trends():
         else:
             raise ValueError('Remote disconnect x5 for geonames')
         if 'codes' not in ret:
-            raise ValueError(ret['status']['message'])
+            raise ValueError('Geonames API replied: '+ret['status']['message'])
         codes = [code for code in ret['codes'] if code['type']=='ISO3166-2']
         region_code = sorted(codes, key=lambda x: x['level'])[0]['code']
         if ret['countryCode'] in self.region_map:

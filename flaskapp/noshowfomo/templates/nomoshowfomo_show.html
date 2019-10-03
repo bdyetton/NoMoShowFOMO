@@ -1,9 +1,9 @@
 <html lang="en" class="gr__getbootstrap_com"><head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description" content="">
-    <meta name="author" content="">
-    <link rel="icon" href="/docs/4.1/assets/img/favicons/favicon.ico">
+    <meta name="description" content="Ben Yetton's Personal Website">
+    <meta name="author" content="Ben Yetton">
+    <link rel="icon" href="../static/assets/rock_on_emoji.png">
 
     <title>No Mo' Show FOMO: Predict when concerts will sell out!</title>
 
@@ -19,8 +19,8 @@
 
   <body class="text-center" data-gr-c-s-loaded="true">
 
-        <div style="width: 300px; margin: 0 auto">
-            {% if will_sell_out %}
+        <div style="width: 350px; margin: 0 auto">
+            {% if will_sell_out > 50 %}
                 <h1 class="h2 mb-3 font-weight-normal">Oh no!</h1>
                 <img class="mb-4" src="../static/assets/cold_sweat_emoji.png" alt="" width="82" height="85">
             {% else %}
@@ -30,10 +30,10 @@
                 <h1 class="h4 mb-3 font-weight-normal">{{artist}}</h1>
                 <h1 class="h5 mb-3 font-weight-normal">@ {{venue}}, {{city}}, {{country}}</h1>
                 <h1 class="h4 mb-3 font-weight-normal">
-                    {% if will_sell_out %}
-                    is likely to sell out!
+                    {% if will_sell_out < 50 %}
+                    only has a <b style="color: #0b2e13">{{'%0.1f'| format(will_sell_out|float)}}%</b> chance of selling out.
                     {% else %}
-                    isn't likely to sell out
+                    has a <b style="color: #721c24">{{'%0.1f'| format(will_sell_out|float)}}%</b> chance of selling out!
                     {% endif %}
                 </h1>
                 <br>
