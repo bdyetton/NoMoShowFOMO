@@ -38,8 +38,12 @@ def features_for_data_point(data_point):
     data_point['popularity_country_norm'] = data_point['venue_capacity'] / data_point['population_country']
     data_point['popularity_region_norm'] = data_point['venue_capacity'] / data_point['population_city']
     data_point['popularity_in_country_resid'] = data_point['popularity_in_country'] - data_point['popularity_in_region']
+    data_point['population_country_resid'] = data_point['population_country'] - data_point['population_city']
     data_point['price_mean_normalized'] = data_point['price_mean']/data_point['gdp_country']
     data_point['price_median_normalized'] = data_point['price_median']/data_point['gdp_country']
+    data_point['subcat_52'] = data_point['subcat']=='52'
+    data_point['subcat_1'] = data_point['subcat']=='1'
+    #data_point['price_last_normalized'] = data_point['price_mean']/data_point['gdp_country']
     #data_point['price_last_normalized'] = data_point['price_mean']/data_point['gdp_country']
 
     return data_point

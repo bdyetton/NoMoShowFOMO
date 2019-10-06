@@ -19,6 +19,7 @@ def index():
     return render_template("index.html")
 
 @app.route('/nomoshowfomo')
+@app.route('/nomoshowfomo/')
 def nomoshowfomo():
     return render_template("nomoshowfomo.html")
 

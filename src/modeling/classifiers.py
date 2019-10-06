@@ -122,13 +122,14 @@ class NoFomoXGBoost(BaseClassifier):
             super(NoFomoXGBoost, self).__init__(name, IVs, DV, model)
 
         self.param_dist = {
-            'n_estimators': stats.randint(150, 500),
+            'n_estimators': stats.randint(150, 400),
             'learning_rate': stats.uniform(0.01, 0.07),
             'subsample': stats.uniform(0.3, 0.7),
-            'max_depth': [3, 4, 5, 6, 7, 8, 9],
-            'colsample_bytree': stats.uniform(0.5, 0.45),
+            'max_depth': [3, 4, 5, 6,7,8,9],
+            'colsample_bytree': stats.uniform(0.5, 0.7),
             'min_child_weight': [1, 2, 3],
-            'alpha': MyLogSpace(-3, 2)
+            #'alpha': MyLogSpace(-1, 7),
+            'lambda': MyLogSpace(-2, 4)
                            }
 
     def interpret_features(self):
