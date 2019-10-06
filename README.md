@@ -1,5 +1,5 @@
 # NoShowFOMO
-Never Miss A Concert Again
+**Never Miss A Concert Again**
 
 52% of the US population attend a concert at least once per year, however, many miss out on their favorite acts because tickets sell out.
 
